@@ -20,7 +20,7 @@ interface CategoryDef {
   subTitle: string;
   englishTitle: string;
   icon: React.ReactNode;
-  themeColor: string; // Tailwind class for text/bg accents
+  themeColor: string;
   gameMode: GameMode;
   levels: LevelConfig[];
 }
@@ -140,7 +140,6 @@ const CATEGORIES: CategoryDef[] = [
   }
 ];
 
-// Helper to resolve dynamic tailwind classes safely
 const getThemeClasses = (color: string) => {
   const map: Record<string, { bg: string, text: string, border: string, iconBg: string }> = {
     amber: { bg: 'hover:border-amber-400', text: 'text-amber-700', border: 'border-amber-200', iconBg: 'bg-amber-100 text-amber-600' },
@@ -161,7 +160,6 @@ const App: React.FC = () => {
   const [currentLevel, setCurrentLevel] = useState<LevelConfig | null>(null);
   const [scores, setScores] = useState<GameScore[]>([]);
 
-  // Calculate highest level unlocked per category
   const getUnlockedLevel = (gameMode: GameMode) => {
     let maxLevel = 1;
     scores.forEach(s => {
@@ -173,7 +171,7 @@ const App: React.FC = () => {
     return maxLevel;
   };
 
-  const handleGameFinish = (score: number, stars: number, action: 'next' | 'quit' = 'quit') => {
+  const handleGameFinish = (score: number, stars: number) => {
     if (selectedCategory && currentLevel) {
       const gameId = `${selectedCategory.gameMode}-${currentLevel.level}`;
       const newRecord: GameScore = {
@@ -183,24 +181,12 @@ const App: React.FC = () => {
         date: new Date().toISOString(),
       };
       setScores(prev => [...prev, newRecord]);
-
-      if (action === 'next') {
-        const currentIndex = selectedCategory.levels.findIndex(l => l.level === currentLevel.level);
-        if (currentIndex !== -1 && currentIndex < selectedCategory.levels.length - 1) {
-           setCurrentLevel(selectedCategory.levels[currentIndex + 1]);
-           playSound('click');
-        } else {
-           setViewState('LEVEL_SELECT');
-        }
-      } else {
-        setViewState('LEVEL_SELECT');
-      }
+      setViewState('LEVEL_SELECT');
     }
   };
 
   const renderContent = () => {
     if (viewState === 'GAME' && selectedCategory && currentLevel) {
-       // We use key to force re-mounting when level changes
        const props = {
          key: `${selectedCategory.gameMode}-${currentLevel.level}`,
          levelConfig: currentLevel,
@@ -301,10 +287,9 @@ const App: React.FC = () => {
       );
     }
 
-    // HOME SCREEN - Professional Layout
+    // HOME SCREEN
     return (
       <div className="flex flex-col h-full bg-slate-50 overflow-hidden font-sans">
-        {/* Professional Header */}
         <header className="px-8 py-5 bg-white border-b border-slate-200 flex justify-between items-center z-10 shadow-sm">
           <div className="flex items-center gap-3">
             <div className="bg-blue-600 p-2 rounded-lg">
@@ -312,7 +297,7 @@ const App: React.FC = () => {
             </div>
             <div>
               <h1 className="text-xl font-bold text-slate-900 tracking-tight leading-none">NeuroGuard PSCI</h1>
-              <p className="text-xs text-slate-500 font-medium mt-1 tracking-wide">COGNITIVE TRAINING SYSTEM | 认知训练系统</p>
+              <p className="text-xs text-slate-500 font-medium mt-1 tracking-wide">认知训练系统 | Powered by Grok AI</p>
             </div>
           </div>
           <button 
@@ -324,7 +309,6 @@ const App: React.FC = () => {
           </button>
         </header>
 
-        {/* Dashboard Grid */}
         <div className="flex-1 overflow-y-auto p-8">
           <div className="max-w-7xl mx-auto">
             <h2 className="text-lg font-bold text-slate-700 mb-6 flex items-center gap-2">
@@ -361,7 +345,6 @@ const App: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Watermark Icon */}
                     <div className={`absolute -bottom-6 -right-6 opacity-5 transform rotate-12 group-hover:scale-110 transition-transform duration-500 pointer-events-none ${theme.text}`}>
                        {React.cloneElement(cat.icon as React.ReactElement, { className: "w-32 h-32" })}
                     </div>
@@ -373,7 +356,7 @@ const App: React.FC = () => {
         </div>
         
         <footer className="px-8 py-4 bg-white border-t border-slate-200 text-center text-xs text-slate-400 font-medium">
-          NeuroGuard PSCI v1.0 • Professional Cognitive Rehabilitation
+          NeuroGuard PSCI v2.0 • Professional Cognitive Rehabilitation
         </footer>
       </div>
     );
