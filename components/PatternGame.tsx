@@ -1,5 +1,3 @@
-### 7️⃣ **components/PatternGame.tsx** (完整替换)
-```typescript
 import React, { useState, useEffect } from 'react';
 import { LevelConfig } from '../types';
 import { speak, playSound } from '../services/audioService';
