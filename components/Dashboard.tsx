@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { GameScore } from '../types';
-import { Trophy, TrendingUp, Calendar, Stethoscope, Loader2, FileText, Activity, Clock, ArrowLeft, Brain } from 'lucide-react';
-import { generateTherapistReport } from '../services/geminiService';
+import { Trophy, TrendingUp, Calendar, Loader2, FileText, Activity, Clock, ArrowLeft, Brain } from 'lucide-react';
+import { generateGrokReport } from '../services/grokService';
 
 interface Props {
   scores: GameScore[];
@@ -17,7 +17,7 @@ export const Dashboard: React.FC<Props> = ({ scores, onBack }) => {
 
   const handleGenerateReport = async () => {
     setLoading(true);
-    const text = await generateTherapistReport(scores);
+    const text = await generateGrokReport(scores);
     setReport(text);
     setLoading(false);
   };
@@ -36,7 +36,6 @@ export const Dashboard: React.FC<Props> = ({ scores, onBack }) => {
 
   return (
     <div className="flex flex-col h-full bg-slate-50 overflow-hidden">
-      {/* Header */}
       <header className="px-8 py-5 bg-white border-b border-slate-200 flex items-center gap-4 z-10 shadow-sm shrink-0">
          <button 
            onClick={onBack}
@@ -45,8 +44,8 @@ export const Dashboard: React.FC<Props> = ({ scores, onBack }) => {
            <ArrowLeft className="w-5 h-5" />
          </button>
          <div>
-            <h1 className="text-xl font-bold text-slate-900">Patient Progress Report</h1>
-            <p className="text-xs text-slate-500 font-medium">NEUROGUARD PSCI CLINICAL DATA</p>
+            <h1 className="text-xl font-bold text-slate-900">训练进展报告</h1>
+            <p className="text-xs text-slate-500 font-medium">GROK AI 认知康复评估系统</p>
          </div>
       </header>
 
@@ -58,21 +57,21 @@ export const Dashboard: React.FC<Props> = ({ scores, onBack }) => {
                 <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
                     <div className="flex items-center gap-3 mb-2">
                         <div className="p-2 bg-blue-50 rounded-lg text-blue-600"><Activity className="w-5 h-5" /></div>
-                        <span className="text-sm font-semibold text-slate-500 uppercase tracking-wider">Total Sessions</span>
+                        <span className="text-sm font-semibold text-slate-500 uppercase tracking-wider">训练次数</span>
                     </div>
                     <p className="text-3xl font-bold text-slate-900">{scores.length}</p>
                 </div>
                 <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
                     <div className="flex items-center gap-3 mb-2">
                         <div className="p-2 bg-emerald-50 rounded-lg text-emerald-600"><Trophy className="w-5 h-5" /></div>
-                        <span className="text-sm font-semibold text-slate-500 uppercase tracking-wider">Cumulative Score</span>
+                        <span className="text-sm font-semibold text-slate-500 uppercase tracking-wider">累计得分</span>
                     </div>
                     <p className="text-3xl font-bold text-slate-900">{totalScore}</p>
                 </div>
                 <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
                     <div className="flex items-center gap-3 mb-2">
                         <div className="p-2 bg-indigo-50 rounded-lg text-indigo-600"><Clock className="w-5 h-5" /></div>
-                        <span className="text-sm font-semibold text-slate-500 uppercase tracking-wider">Last Session</span>
+                        <span className="text-sm font-semibold text-slate-500 uppercase tracking-wider">最后训练</span>
                     </div>
                     <p className="text-lg font-bold text-slate-900">
                         {scores.length > 0 ? new Date(scores[scores.length-1].date).toLocaleDateString() : 'N/A'}
@@ -82,40 +81,43 @@ export const Dashboard: React.FC<Props> = ({ scores, onBack }) => {
 
             {/* AI Analysis */}
             <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-                <div className="px-6 py-4 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
+                <div className="px-6 py-4 border-b border-slate-100 bg-gradient-to-r from-blue-50 to-indigo-50 flex justify-between items-center">
                     <div className="flex items-center gap-2">
                         <Brain className="w-5 h-5 text-blue-600" />
-                        <h3 className="font-bold text-slate-800">AI Clinical Analysis</h3>
+                        <h3 className="font-bold text-slate-800">Grok AI 康复评估</h3>
+                        <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full font-semibold">AI POWERED</span>
                     </div>
                     {!loading && (
                         <button 
                             onClick={handleGenerateReport}
-                            className="text-sm text-blue-600 font-semibold hover:text-blue-700 flex items-center gap-1"
+                            className="text-sm text-blue-600 font-semibold hover:text-blue-700 flex items-center gap-1 px-3 py-1.5 bg-white rounded-lg shadow-sm hover:shadow transition-all"
                         >
                             <FileText className="w-4 h-4" />
-                            {report ? "Regenerate Report" : "Generate Report"}
+                            {report ? "重新生成" : "生成报告"}
                         </button>
                     )}
                 </div>
                 
-                <div className="p-6">
+               <div className="p-6">
                     {!report && !loading && (
-                        <div className="text-center py-8 text-slate-500">
-                            <p className="mb-2">No analysis generated yet.</p>
-                            <p className="text-sm">Click "Generate Report" to receive an AI-powered cognitive assessment.</p>
+                        <div className="text-center py-12 text-slate-500">
+                            <Brain className="w-16 h-16 mx-auto mb-4 text-slate-300" />
+                            <p className="text-lg font-medium mb-2">尚未生成 AI 评估报告</p>
+                            <p className="text-sm">点击"生成报告"按钮，让 Grok AI 为您分析认知训练表现</p>
                         </div>
                     )}
 
                     {loading && (
-                        <div className="flex flex-col items-center justify-center py-12">
-                            <Loader2 className="w-8 h-8 text-blue-600 animate-spin mb-3" />
-                            <span className="text-slate-600 font-medium">Analyzing cognitive performance patterns...</span>
+                        <div className="flex flex-col items-center justify-center py-16">
+                            <Loader2 className="w-10 h-10 text-blue-600 animate-spin mb-4" />
+                            <span className="text-slate-600 font-medium text-lg">Grok AI 正在分析认知表现...</span>
+                            <span className="text-slate-400 text-sm mt-2">这可能需要几秒钟</span>
                         </div>
                     )}
 
                     {report && (
                         <div className="prose prose-slate max-w-none">
-                            <div className="whitespace-pre-wrap font-sans text-slate-700 leading-relaxed text-sm md:text-base border-l-4 border-blue-500 pl-4 bg-slate-50/50 p-4 rounded-r-lg">
+                            <div className="whitespace-pre-wrap font-sans text-slate-700 leading-relaxed text-sm md:text-base border-l-4 border-blue-500 pl-6 bg-slate-50/70 p-6 rounded-r-xl">
                                 {report}
                             </div>
                         </div>
@@ -128,12 +130,16 @@ export const Dashboard: React.FC<Props> = ({ scores, onBack }) => {
                 <div className="px-6 py-4 border-b border-slate-100 bg-slate-50">
                     <h3 className="font-bold text-slate-800 flex items-center gap-2">
                         <Calendar className="w-5 h-5 text-slate-500" />
-                        Recent Activity Log
+                        最近训练记录
                     </h3>
                 </div>
                 <div className="divide-y divide-slate-100">
                     {recentScores.length === 0 ? (
-                        <div className="p-8 text-center text-slate-400">No training data available.</div>
+                        <div className="p-12 text-center text-slate-400">
+                            <Activity className="w-12 h-12 mx-auto mb-3 text-slate-300" />
+                            <p>暂无训练数据</p>
+                            <p className="text-sm mt-1">完成训练后，记录将显示在这里</p>
+                        </div>
                     ) : (
                         recentScores.map((score, idx) => (
                             <div key={idx} className="px-6 py-4 flex items-center justify-between hover:bg-slate-50 transition-colors">
