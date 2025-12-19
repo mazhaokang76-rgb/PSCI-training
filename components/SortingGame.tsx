@@ -72,30 +72,33 @@ export const SortingGame: React.FC<Props> = ({ levelConfig, onBack, onFinish }) 
     playSound('click');
   };
 
-  const handleSort = (targetCat: 'A' | 'B') => {
+const handleSort = (targetCat: 'A' | 'B') => {
     if (!currentItem) return;
 
     if (currentItem.category === targetCat) {
       playSound('success');
       const pointsPerItem = 100 / totalItems;
       setScore(s => Math.min(100, Math.ceil(s + pointsPerItem)));
-    } else {playSound('error');
-}
-    const nextQueue = queue.slice(1);
-setQueue(nextQueue);
+    } else {
+      playSound('error');
+    }
 
-if (nextQueue.length > 0) {
-  setCurrentItem(nextQueue[0]);
-} else {
-  finishGame();
-}
-};
-const finishGame = () => {
-setGameState('feedback');
-const stars = score >= 80 ? 3 : score >= 60 ? 2 : 1;
-setMessage(stars >= 2 ? "分类能力很棒！" : "继续加油！");
-if (stars >= 2) speak("真棒");
-};
+    const nextQueue = queue.slice(1);
+    setQueue(nextQueue);
+
+    if (nextQueue.length > 0) {
+      setCurrentItem(nextQueue[0]);
+    } else {
+      finishGame();
+    }
+  };
+
+  const finishGame = () => {
+    setGameState('feedback');
+    const stars = score >= 80 ? 3 : score >= 60 ? 2 : 1;
+    setMessage(stars >= 2 ? "分类能力很棒！" : "继续加油！");
+    if (stars >= 2) speak("真棒");
+  };
 if (gameState === 'intro') {
 const data = DATA_SETS[levelConfig.level as 1|2|3] || DATA_SETS[1];
 return (
