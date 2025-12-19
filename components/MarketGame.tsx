@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { GameMode, Difficulty, MarketItem, LevelConfig } from '../types';
-import { generateEncouragement } from '../services/geminiService';
 import { speak, playSound } from '../services/audioService';
-import { ShoppingBasket, CheckCircle, Loader2, Star, ArrowRight } from 'lucide-react';
+import { ShoppingBasket, CheckCircle, Star, ArrowRight } from 'lucide-react';
 
 interface Props {
   levelConfig: LevelConfig;
   onBack: () => void;
-  onFinish: (score: number, stars: number, action: 'next' | 'quit') => void;
+  onFinish: (score: number, stars: number) => void;
 }
 
 const MARKET_ITEMS = [
@@ -26,25 +25,21 @@ export const MarketGame: React.FC<Props> = ({ levelConfig, onBack, onFinish }) =
   const [items, setItems] = useState<MarketItem[]>([]);
   const [targetList, setTargetList] = useState<string[]>([]);
   const [basket, setBasket] = useState<string[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
   const [score, setScore] = useState(0);
+  const [message, setMessage] = useState("");
 
   useEffect(() => {
     if (gameState === 'intro') {
-      speak(`欢迎来到超市大采购，第${levelConfig.level}关。请记住购物清单。`);
+      speak(`欢迎来到超市大采购，第${levelConfig.level}关。请记住购物清单`);
     }
   }, [gameState, levelConfig.level]);
 
   const startGame = () => {
-    setLoading(true);
-    // Determine number of targets based on difficulty
     const count = levelConfig.difficulty === Difficulty.EASY ? 3 : levelConfig.difficulty === Difficulty.MEDIUM ? 5 : 7;
     
-    // Shuffle and pick targets
     const shuffled = [...MARKET_ITEMS].sort(() => Math.random() - 0.5);
     const targets = shuffled.slice(0, count);
-    const distractors = shuffled.slice(count, count + 8); // Always show 8 distractors
+    const distractors = shuffled.slice(count, count + 8);
 
     setTargetList(targets.map(t => t.name));
     
@@ -59,9 +54,8 @@ export const MarketGame: React.FC<Props> = ({ levelConfig, onBack, onFinish }) =
 
     setItems(gameItems);
     setBasket([]);
-    setLoading(false);
     setGameState('memorize');
-    speak("请记住这些商品，记好了请按蓝色按钮。");
+    speak("请记住这些商品，记好了请按蓝色按钮");
   };
 
   const handleSelectItem = (item: MarketItem) => {
@@ -75,7 +69,7 @@ export const MarketGame: React.FC<Props> = ({ levelConfig, onBack, onFinish }) =
     }
   };
 
-  const submitBasket = async () => {
+  const submitBasket = () => {
     let correctCount = 0;
     let wrongCount = 0;
 
@@ -87,33 +81,23 @@ export const MarketGame: React.FC<Props> = ({ levelConfig, onBack, onFinish }) =
       }
     });
 
-    // Scoring: 100 max. 
-    // Points per target = 100 / totalTargets.
-    // Penalty for wrong items = half of point per target.
     const pointPerTarget = 100 / targetList.length;
     let currentScore = (correctCount * pointPerTarget) - (wrongCount * (pointPerTarget / 2));
-    
-    // Clamp score
     currentScore = Math.max(0, Math.min(100, Math.round(currentScore)));
     
     setScore(currentScore);
-    setLoading(true);
     
-    // Standard thresholds
     const stars = currentScore >= 80 ? 3 : currentScore >= 60 ? 2 : 1;
-
-    const feedback = await generateEncouragement(currentScore, "超市大采购");
-    setMessage(feedback);
+    setMessage(stars >= 2 ? "太棒了！记忆力很好！" : "继续加油！");
     
     if (stars >= 2) {
       playSound('success');
-      speak(`太棒了！您获得了${stars}颗星。${feedback}`);
+      speak(`太棒了！您获得了${stars}颗星`);
     } else {
       playSound('error');
-      speak(`继续加油。${feedback}`);
+      speak(`继续加油`);
     }
 
-    setLoading(false);
     setGameState('feedback');
   };
 
@@ -128,14 +112,13 @@ export const MarketGame: React.FC<Props> = ({ levelConfig, onBack, onFinish }) =
           <div className="inline-block bg-emerald-100 text-emerald-800 px-4 py-1 rounded-full text-lg font-bold mb-4">
             第 {levelConfig.level} 关
           </div>
-          <p className="text-xl text-slate-600 leading-relaxed">请记住购物清单<br/>然后把商品放入篮子。</p>
+          <p className="text-xl text-slate-600 leading-relaxed mb-8">请记住购物清单<br/>然后把商品放入篮子</p>
           
           <button 
             onClick={startGame}
-            disabled={loading}
-            className="mt-8 w-full bg-emerald-600 text-white text-2xl py-4 rounded-2xl shadow-lg hover:bg-emerald-700 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center font-bold"
+            className="mt-8 w-full bg-emerald-600 text-white text-2xl py-4 rounded-2xl shadow-lg hover:bg-emerald-700 transition-all active:scale-95 flex items-center justify-center font-bold"
           >
-            {loading ? <Loader2 className="animate-spin w-8 h-8" /> : <><ArrowRight className="mr-2 w-8 h-8" /> 开始挑战</>}
+            <ArrowRight className="mr-2 w-8 h-8" /> 开始挑战
           </button>
         </div>
         <button onClick={onBack} className="text-slate-500 text-lg underline">返回</button>
@@ -197,15 +180,12 @@ export const MarketGame: React.FC<Props> = ({ levelConfig, onBack, onFinish }) =
             </div>
           </div>
 
-          <div className="flex flex-col gap-4">
-            <button 
-              onClick={() => onFinish(score, stars, 'next')}
-              className="bg-emerald-600 text-white text-2xl py-4 rounded-2xl shadow-lg hover:bg-emerald-700 font-bold active:scale-95 transition-all"
-            >
-              {stars >= 2 ? "下一关" : "完成"}
-            </button>
-            <button onClick={() => onFinish(score, stars, 'quit')} className="text-slate-400 py-2 text-lg">退出</button>
-          </div>
+          <button 
+            onClick={() => onFinish(score, stars)}
+            className="w-full bg-emerald-600 text-white text-2xl py-4 rounded-2xl shadow-lg hover:bg-emerald-700 font-bold active:scale-95 transition-all"
+          >
+            完成
+          </button>
         </div>
       </div>
     );
