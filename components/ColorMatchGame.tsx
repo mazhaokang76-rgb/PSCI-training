@@ -1,19 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { LevelConfig } from '../types';
-import { generateEncouragement } from '../services/geminiService';
 import { speak, playSound } from '../services/audioService';
-import { Palette, Star, ArrowRight, Play } from 'lucide-react';
+import { Palette, Star, Play } from 'lucide-react';
 
 interface Props {
   levelConfig: LevelConfig;
   onBack: () => void;
-  onFinish: (score: number, stars: number, action: 'next' | 'quit') => void;
+  onFinish: (score: number, stars: number) => void;
 }
 
 interface ColorOption {
   label: string;
-  colorCode: string; // Tailwind class or hex
-  value: string; // The concept (e.g. 'red')
+  colorCode: string;
+  value: string;
 }
 
 const COLORS: ColorOption[] = [
@@ -36,19 +35,15 @@ export const ColorMatchGame: React.FC<Props> = ({ levelConfig, onBack, onFinish 
   useEffect(() => {
     if (gameState === 'intro') {
       const mode = levelConfig.level === 1 ? "意思" : "颜色";
-      speak(`颜色大作战第${levelConfig.level}关。请点击文字的${mode}。`);
+      speak(`颜色大作战第${levelConfig.level}关。请点击文字的${mode}`);
     }
   }, [gameState, levelConfig.level]);
 
   const generateTurn = () => {
-    // Pick a random word
     const word = COLORS[Math.floor(Math.random() * COLORS.length)];
-    // Pick a random ink color
-    // Level 1: Congruent (Word Red is Red)
-    // Level 2/3: Incongruent (Word Red is Blue)
     let ink = word;
+    
     if (levelConfig.level > 1) {
-       // 50% chance of being different in Level 2+
        if (Math.random() > 0.3) {
          const others = COLORS.filter(c => c.value !== word.value);
          ink = others[Math.floor(Math.random() * others.length)];
@@ -58,7 +53,6 @@ export const ColorMatchGame: React.FC<Props> = ({ levelConfig, onBack, onFinish 
     setCurrentWord(word);
     setInkColor(ink);
 
-    // Generate options
     const target = levelConfig.level === 1 ? word : ink;
     const distractor = COLORS.filter(c => c.value !== target.value)[Math.floor(Math.random() * (COLORS.length - 1))];
     const opts = [target, distractor].sort(() => Math.random() - 0.5);
@@ -98,12 +92,11 @@ export const ColorMatchGame: React.FC<Props> = ({ levelConfig, onBack, onFinish 
     generateTurn();
   };
 
-  const endGame = async () => {
+  const endGame = () => {
     setGameState('feedback');
-    const msg = await generateEncouragement(score, "颜色大作战");
-    setMessage(msg);
     const stars = score >= 80 ? 3 : score >= 50 ? 2 : 1;
-    if (stars >= 2) speak(`反应很快！获得${stars}颗星。`);
+    setMessage(stars >= 2 ? "反应很快！" : "继续加油！");
+    if (stars >= 2) speak(`获得${stars}颗星`);
   };
 
   if (gameState === 'intro') {
@@ -117,8 +110,8 @@ export const ColorMatchGame: React.FC<Props> = ({ levelConfig, onBack, onFinish 
           <div className="inline-block bg-pink-100 text-pink-800 px-4 py-1 rounded-full text-lg font-bold mb-4">
             第 {levelConfig.level} 关
           </div>
-          <p className="text-xl text-slate-600 leading-relaxed">
-            {levelConfig.level === 1 ? "看文字：点击与文字意思相同的颜色按钮。" : "看颜色：忽略文字意思，点击文字的颜色。"}
+          <p className="text-xl text-slate-600 leading-relaxed mb-8">
+            {levelConfig.level === 1 ? "看文字：点击与文字意思相同的颜色按钮" : "看颜色：忽略文字意思，点击文字的颜色"}
           </p>
           
           <button 
@@ -147,15 +140,12 @@ export const ColorMatchGame: React.FC<Props> = ({ levelConfig, onBack, onFinish 
           <h3 className="text-4xl font-bold mb-4 text-slate-800">时间到!</h3>
           <p className="text-5xl font-bold text-pink-600 mb-4">{score} 分</p>
           <p className="text-xl text-slate-600 mb-8 font-medium">{message}</p>
-          <div className="flex flex-col gap-4">
-            <button 
-              onClick={() => onFinish(score, stars, 'next')}
-              className="bg-pink-600 text-white text-2xl py-4 rounded-2xl shadow hover:bg-pink-700 font-bold active:scale-95 transition-all"
-            >
-              {stars >= 2 ? "下一关" : "完成"}
-            </button>
-            <button onClick={() => onFinish(score, stars, 'quit')} className="text-slate-400 py-2 text-lg">退出</button>
-          </div>
+          <button 
+            onClick={() => onFinish(score, stars)}
+            className="w-full bg-pink-600 text-white text-2xl py-4 rounded-2xl shadow-lg hover:bg-pink-700 font-bold active:scale-95 transition-all"
+          >
+            完成
+          </button>
         </div>
       </div>
     );
@@ -186,7 +176,12 @@ export const ColorMatchGame: React.FC<Props> = ({ levelConfig, onBack, onFinish 
               key={idx}
               onClick={() => handleAnswer(opt)}
               className="h-32 rounded-3xl shadow-lg border-4 border-white active:scale-95 transition-all flex items-center justify-center"
-              style={{ backgroundColor: opt.value === 'black' ? '#1e293b' : opt.value === 'red' ? '#ef4444' : opt.value === 'blue' ? '#3b82f6' : opt.value === 'green' ? '#22c55e' : '#eab308' }}
+              style={{ 
+                backgroundColor: opt.value === 'black' ? '#1e293b' : 
+                                opt.value === 'red' ? '#ef4444' : 
+                                opt.value === 'blue' ? '#3b82f6' : 
+                                opt.value === 'green' ? '#22c55e' : '#eab308' 
+              }}
             >
               <span className="text-white text-4xl font-bold drop-shadow-md">{opt.label}</span>
             </button>
