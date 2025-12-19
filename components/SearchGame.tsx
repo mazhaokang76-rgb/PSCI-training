@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { LevelConfig, Difficulty } from '../types';
-import { generateEncouragement } from '../services/geminiService';
+import { LevelConfig } from '../types';
 import { speak, playSound } from '../services/audioService';
-import { Search, Loader2, Eye, Star, ArrowRight } from 'lucide-react';
+import { Search, Eye, Star, ArrowRight } from 'lucide-react';
 
 interface Props {
   levelConfig: LevelConfig;
   onBack: () => void;
-  onFinish: (score: number, stars: number, action: 'next' | 'quit') => void;
+  onFinish: (score: number, stars: number) => void;
 }
 
 const CHAR_PAIRS = [
@@ -28,34 +27,28 @@ export const SearchGame: React.FC<Props> = ({ levelConfig, onBack, onFinish }) =
   const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(30);
   const [message, setMessage] = useState("");
-  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (gameState === 'intro') {
-      speak(`火眼金睛第${levelConfig.level}关。请找出所有的目标字。`);
+      speak(`火眼金睛第${levelConfig.level}关`);
     }
-  }, [gameState, levelConfig.level]);
+  }, [gameState]);
 
   const startGame = () => {
-    // Config based on level params
     const gridSize = levelConfig.params?.gridSize || 12;
-    
     const pair = CHAR_PAIRS[Math.floor(Math.random() * CHAR_PAIRS.length)];
     setTargetChar(pair.target);
 
-    const targetCount = 3 + Math.floor(Math.random() * 3); // 3 to 5 targets
+    const targetCount = 3 + Math.floor(Math.random() * 3);
     const newGrid = [];
 
-    // Add targets
     for (let i = 0; i < targetCount; i++) {
       newGrid.push({ id: i, char: pair.target, isTarget: true, found: false });
     }
-    // Add distractors
     for (let i = targetCount; i < gridSize; i++) {
       newGrid.push({ id: i, char: pair.distractor, isTarget: false, found: false });
     }
 
-    // Shuffle
     for (let i = newGrid.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [newGrid[i], newGrid[j]] = [newGrid[j], newGrid[i]];
@@ -91,13 +84,11 @@ export const SearchGame: React.FC<Props> = ({ levelConfig, onBack, onFinish }) =
       const newGrid = [...grid];
       newGrid[index].found = true;
       setGrid(newGrid);
-      setGrid(newGrid);
       setScore(s => s + 10);
 
-      // Check win condition
       if (newGrid.filter(i => i.isTarget && !i.found).length === 0) {
         speak("找到了！");
-        setTimeout(startGame, 500); 
+        setTimeout(startGame, 500);
       }
     } else {
       playSound('error');
@@ -105,15 +96,11 @@ export const SearchGame: React.FC<Props> = ({ levelConfig, onBack, onFinish }) =
     }
   };
 
-  const endGame = async () => {
-    setLoading(true);
+  const endGame = () => {
     setGameState('feedback');
-    const msg = await generateEncouragement(score, "火眼金睛");
-    setMessage(msg);
-    setLoading(false);
-    
     const stars = score >= 80 ? 3 : score >= 40 ? 2 : 1;
-    if (stars >= 2) speak("真厉害，您的眼神真好！");
+    setMessage(stars >= 2 ? "观察力真好！" : "继续加油！");
+    if (stars >= 2) speak("真厉害");
   };
 
   if (gameState === 'intro') {
@@ -127,7 +114,7 @@ export const SearchGame: React.FC<Props> = ({ levelConfig, onBack, onFinish }) =
            <div className="inline-block bg-orange-100 text-orange-800 px-4 py-1 rounded-full text-lg font-bold mb-4">
             第 {levelConfig.level} 关
           </div>
-          <p className="text-xl text-slate-600 leading-relaxed">在相似的字中，<br/>找出指定的目标字。</p>
+          <p className="text-xl text-slate-600 leading-relaxed mb-8">在相似的字中<br/>找出指定的目标字</p>
           
           <button 
             onClick={startGame}
@@ -157,15 +144,12 @@ export const SearchGame: React.FC<Props> = ({ levelConfig, onBack, onFinish }) =
           <h3 className="text-4xl font-bold mb-4 text-slate-800">时间到!</h3>
           <p className="text-5xl font-bold text-orange-600 mb-4">{score} 分</p>
           <p className="text-xl text-slate-600 mb-8 font-medium">{message}</p>
-          <div className="flex flex-col gap-4">
-            <button 
-              onClick={() => onFinish(score, stars, 'next')}
-              className="bg-orange-600 text-white text-2xl py-4 rounded-2xl shadow hover:bg-orange-700 font-bold active:scale-95 transition-all"
-            >
-              {stars >= 2 ? "下一关" : "完成"}
-            </button>
-            <button onClick={() => onFinish(score, stars, 'quit')} className="text-slate-400 py-2 text-lg">退出</button>
-          </div>
+          <button 
+            onClick={() => onFinish(score, stars)}
+            className="w-full bg-orange-600 text-white text-2xl py-4 rounded-2xl shadow hover:bg-orange-700 font-bold active:scale-95 transition-all"
+          >
+            完成
+          </button>
         </div>
       </div>
     );
