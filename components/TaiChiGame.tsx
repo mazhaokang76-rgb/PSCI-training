@@ -1,13 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { LevelConfig } from '../types';
-import { generateEncouragement } from '../services/geminiService';
 import { speak, playSound } from '../services/audioService';
-import { Hand, Loader2, Star, Play } from 'lucide-react';
+import { Hand, Star, Play } from 'lucide-react';
 
 interface Props {
   levelConfig: LevelConfig;
   onBack: () => void;
-  onFinish: (score: number, stars: number, action: 'next' | 'quit') => void;
+  onFinish: (score: number, stars: number) => void;
 }
 
 interface FallingItem {
@@ -26,14 +25,13 @@ export const TaiChiGame: React.FC<Props> = ({ levelConfig, onBack, onFinish }) =
   const [catcherX, setCatcherX] = useState(50);
   const [items, setItems] = useState<FallingItem[]>([]);
   const [message, setMessage] = useState("");
-  const [loading, setLoading] = useState(false);
   
   const gameLoopRef = useRef<number>();
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (gameState === 'intro') {
-      speak(`接福气第${levelConfig.level}关。移动福袋，接住红包，避开蜘蛛。`);
+      speak(`接福气第${levelConfig.level}关。移动福袋，接住红包，避开蜘蛛`);
     }
   }, [gameState, levelConfig.level]);
 
@@ -53,7 +51,6 @@ export const TaiChiGame: React.FC<Props> = ({ levelConfig, onBack, onFinish }) =
     const baseSpeed = levelConfig.params?.baseSpeed || 0.3;
 
     const loop = (time: number) => {
-      // Spawn items
       if (time - lastSpawn > spawnRate) {
         lastSpawn = time;
         const type = Math.random() > 0.3 ? 'good' : 'bad';
@@ -115,20 +112,14 @@ export const TaiChiGame: React.FC<Props> = ({ levelConfig, onBack, onFinish }) =
     };
   }, [gameState, catcherX, levelConfig]);
 
-  const endGame = async () => {
+  const endGame = () => {
     setGameState('feedback');
-    setLoading(true);
-    const msg = await generateEncouragement(score, "接福气");
-    setMessage(msg);
-    
-    // Star calc (arbitrary targets for demo)
     const target = levelConfig.targetScore || 100;
     const stars = score >= target ? 3 : score >= target * 0.6 ? 2 : 1;
+    setMessage(stars >= 2 ? "反应速度真快！" : "多练习会更快！");
     
-    if (stars >= 2) speak(`时间到！恭喜您获得${stars}颗星。`);
-    else speak("时间到！再试一次吧。");
-
-    setLoading(false);
+    if (stars >= 2) speak(`时间到！恭喜您获得${stars}颗星`);
+    else speak("时间到！再试一次吧");
   };
 
   const moveCatcher = (e: React.MouseEvent | React.TouchEvent) => {
@@ -154,7 +145,7 @@ export const TaiChiGame: React.FC<Props> = ({ levelConfig, onBack, onFinish }) =
            <div className="inline-block bg-amber-100 text-amber-800 px-4 py-1 rounded-full text-lg font-bold mb-4">
             第 {levelConfig.level} 关
           </div>
-          <p className="text-xl text-slate-600 leading-relaxed">移动福袋，接住红包 (🧧)<br/>避开蜘蛛 (🕷️)。</p>
+          <p className="text-xl text-slate-600 leading-relaxed mb-8">移动福袋，接住红包 (🧧)<br/>避开蜘蛛 (🕷️)</p>
           
           <button 
             onClick={startGame}
@@ -187,15 +178,12 @@ export const TaiChiGame: React.FC<Props> = ({ levelConfig, onBack, onFinish }) =
           <p className="text-5xl font-bold text-amber-600 mb-4">{score} 分</p>
           <p className="text-xl text-slate-600 mb-8 font-medium">{message}</p>
           
-          <div className="flex flex-col gap-4">
-            <button 
-              onClick={() => onFinish(score, stars, 'next')}
-              className="bg-amber-600 text-white text-2xl py-4 rounded-2xl shadow hover:bg-amber-700 font-bold active:scale-95 transition-all"
-            >
-              {stars >= 2 ? "下一关" : "完成"}
-            </button>
-            <button onClick={() => onFinish(score, stars, 'quit')} className="text-slate-400 py-2 text-lg">退出</button>
-          </div>
+          <button 
+            onClick={() => onFinish(score, stars)}
+            className="w-full bg-amber-600 text-white text-2xl py-4 rounded-2xl shadow hover:bg-amber-700 font-bold active:scale-95 transition-all"
+          >
+            完成
+          </button>
         </div>
       </div>
     );
