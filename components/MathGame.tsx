@@ -1,14 +1,59 @@
 import React, { useState, useEffect } from 'react';
-import { generateMathProblem, generateEncouragement } from '../services/geminiService';
 import { LevelConfig, Difficulty } from '../types';
 import { speak, playSound } from '../services/audioService';
-import { Calculator, Delete, Loader2, Check, Star, ArrowRight, Play } from 'lucide-react';
+import { Calculator, Delete, Check, Star, Play } from 'lucide-react';
 
 interface Props {
   levelConfig: LevelConfig;
   onBack: () => void;
-  onFinish: (score: number, stars: number, action: 'next' | 'quit') => void;
+  onFinish: (score: number, stars: number) => void;
 }
+
+const generateMathProblem = (difficulty: Difficulty): { question: string; answer: number } => {
+  if (difficulty === Difficulty.EASY) {
+    const a = Math.floor(Math.random() * 9) + 1;
+    const b = Math.floor(Math.random() * 9) + 1;
+    return { question: `${a} + ${b} = ?`, answer: a + b };
+  }
+  
+  if (difficulty === Difficulty.MEDIUM) {
+    const operations = [
+      () => {
+        const a = Math.floor(Math.random() * 15) + 5;
+        const b = Math.floor(Math.random() * 10) + 1;
+        return { question: `${a} - ${b} = ?`, answer: a - b };
+      },
+      () => {
+        const a = Math.floor(Math.random() * 8) + 2;
+        const b = Math.floor(Math.random() * 8) + 2;
+        return { question: `${a} + ${b} = ?`, answer: a + b };
+      }
+    ];
+    return operations[Math.floor(Math.random() * operations.length)]();
+  }
+  
+  // HARD
+  const operations = [
+    () => {
+      const a = Math.floor(Math.random() * 9) + 2;
+      const b = Math.floor(Math.random() * 5) + 2;
+      return { question: `${a} × ${b} = ?`, answer: a * b };
+    },
+    () => {
+      const b = Math.floor(Math.random() * 8) + 2;
+      const answer = Math.floor(Math.random() * 12) + 1;
+      const a = answer * b;
+      return { question: `${a} ÷ ${b} = ?`, answer: answer };
+    },
+    () => {
+      const a = Math.floor(Math.random() * 20) + 10;
+      const b = Math.floor(Math.random() * 15) + 5;
+      const c = Math.floor(Math.random() * 10) + 1;
+      return { question: `${a} - ${b} + ${c} = ?`, answer: a - b + c };
+    }
+  ];
+  return operations[Math.floor(Math.random() * operations.length)]();
+};
 
 export const MathGame: React.FC<Props> = ({ levelConfig, onBack, onFinish }) => {
   const [gameState, setGameState] = useState<'intro' | 'playing' | 'feedback'>('intro');
@@ -16,46 +61,38 @@ export const MathGame: React.FC<Props> = ({ levelConfig, onBack, onFinish }) => 
   const [userAnswer, setUserAnswer] = useState<string>("");
   const [score, setScore] = useState(0);
   const [questionCount, setQuestionCount] = useState(0);
-  const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
-  // Normalized to 10 questions for ~1 minute gameplay
   const MAX_QUESTIONS = 10;
 
   useEffect(() => {
     if (gameState === 'intro') {
-      speak(`菜场算账第${levelConfig.level}关。共${MAX_QUESTIONS}道题，请计算价格。`);
+      speak(`菜场算账第${levelConfig.level}关。共${MAX_QUESTIONS}道题`);
     }
   }, [gameState, levelConfig.level]);
 
-  const nextQuestion = async () => {
+  const nextQuestion = () => {
     if (questionCount >= MAX_QUESTIONS) {
       finishGame();
       return;
     }
 
-    setLoading(true);
-    const problem = await generateMathProblem(levelConfig.difficulty);
+    const problem = generateMathProblem(levelConfig.difficulty);
     setCurrentProblem(problem);
     setUserAnswer("");
-    setLoading(false);
-    
-    if (problem.question.length < 20) {
-        speak(problem.question.replace('?', '多少?'));
-    }
   };
 
-  const startGame = async () => {
+  const startGame = () => {
     setScore(0);
     setQuestionCount(0);
     setGameState('playing');
     playSound('click');
-    await nextQuestion();
+    nextQuestion();
   };
 
   const handleInput = (num: number) => {
     playSound('click');
-    if (userAnswer.length < 3) {
+    if (userAnswer.length < 4) {
       setUserAnswer(prev => prev + num.toString());
     }
   };
@@ -66,11 +103,11 @@ export const MathGame: React.FC<Props> = ({ levelConfig, onBack, onFinish }) => 
   };
 
   const handleSubmit = () => {
-    if (!currentProblem) return;
+    if (!currentProblem || userAnswer === "") return;
     
     const numAns = parseInt(userAnswer);
     if (numAns === currentProblem.answer) {
-      setScore(s => s + 10); // 10 points * 10 questions = 100 max
+      setScore(s => s + 10);
       playSound('success');
     } else {
       playSound('error');
@@ -79,17 +116,11 @@ export const MathGame: React.FC<Props> = ({ levelConfig, onBack, onFinish }) => 
     nextQuestion();
   };
 
-  const finishGame = async () => {
-    setLoading(true);
+  const finishGame = () => {
     setGameState('feedback');
-    const msg = await generateEncouragement(score, "菜场算账");
-    setMessage(msg);
-    setLoading(false);
-
-    // Standardized star thresholds
     const stars = score >= 80 ? 3 : score >= 60 ? 2 : 1;
-    if (stars >= 2) speak(`恭喜！获得${stars}颗星。`);
-    else speak(`算完了，继续加油！`);
+    setMessage(stars >= 2 ? "计算能力很棒！" : "继续练习会更好！");
+    if (stars >= 2) speak(`恭喜！获得${stars}颗星`);
   };
 
   if (gameState === 'intro') {
@@ -103,9 +134,9 @@ export const MathGame: React.FC<Props> = ({ levelConfig, onBack, onFinish }) => 
            <div className="inline-block bg-indigo-100 text-indigo-800 px-4 py-1 rounded-full text-lg font-bold mb-4">
             第 {levelConfig.level} 关
           </div>
-          <p className="text-xl text-slate-600 leading-relaxed">
-            共 {MAX_QUESTIONS} 题。<br/>
-            计算商品价格或找零。
+          <p className="text-xl text-slate-600 leading-relaxed mb-8">
+            共 {MAX_QUESTIONS} 题<br/>
+            快速计算答案
           </p>
           
           <button 
@@ -136,15 +167,12 @@ export const MathGame: React.FC<Props> = ({ levelConfig, onBack, onFinish }) => 
           <h3 className="text-4xl font-bold mb-4 text-slate-800">完成!</h3>
           <p className="text-5xl font-bold text-indigo-600 mb-4">{score} 分</p>
           <p className="text-xl text-slate-600 mb-8 font-medium">{message}</p>
-          <div className="flex flex-col gap-4">
-            <button 
-              onClick={() => onFinish(score, stars, 'next')}
-              className="bg-indigo-600 text-white text-2xl py-4 rounded-2xl shadow-lg hover:bg-indigo-700 w-full font-bold active:scale-95 transition-all"
-            >
-              {stars >= 2 ? "下一关" : "完成"}
-            </button>
-            <button onClick={() => onFinish(score, stars, 'quit')} className="text-slate-400 py-2 text-lg">退出</button>
-          </div>
+          <button 
+            onClick={() => onFinish(score, stars)}
+            className="w-full bg-indigo-600 text-white text-2xl py-4 rounded-2xl shadow-lg hover:bg-indigo-700 font-bold active:scale-95 transition-all"
+          >
+            完成
+          </button>
         </div>
       </div>
     );
@@ -157,13 +185,11 @@ export const MathGame: React.FC<Props> = ({ levelConfig, onBack, onFinish }) => 
         <div className="text-indigo-800 font-bold bg-white px-6 py-2 rounded-full border border-indigo-100 text-xl">得分: {score}</div>
       </div>
 
-      <div className="flex-1 flex flex-col items-center justify-start pt-4 mb-6">
-        {loading ? (
-          <Loader2 className="w-16 h-16 text-indigo-400 animate-spin mt-20" />
-        ) : (
-          <div className="bg-white p-8 rounded-3xl shadow-lg border-2 border-indigo-100 w-full max-w-md min-h-[220px] flex items-center justify-center text-center transform transition-all">
-            <h2 className="text-4xl md:text-5xl font-bold text-slate-800 leading-relaxed">
-              {currentProblem?.question}
+      <div className="flex-1 flex flex-col items-center justify-start pt-8 mb-6">
+        {currentProblem && (
+          <div className="bg-white p-10 rounded-3xl shadow-lg border-2 border-indigo-100 w-full max-w-md min-h-[200px] flex items-center justify-center text-center">
+            <h2 className="text-5xl md:text-6xl font-bold text-slate-800 leading-relaxed">
+              {currentProblem.question}
             </h2>
           </div>
         )}
@@ -171,7 +197,7 @@ export const MathGame: React.FC<Props> = ({ levelConfig, onBack, onFinish }) => 
 
       <div className="w-full max-w-md mx-auto">
         <div className="bg-white p-4 rounded-2xl shadow-inner mb-6 flex justify-between items-center h-24 border-4 border-indigo-100">
-          <span className="text-6xl font-mono text-slate-800 ml-4 font-bold">{userAnswer}</span>
+          <span className="text-6xl font-mono text-slate-800 ml-4 font-bold">{userAnswer || "0"}</span>
           <button onClick={handleDelete} className="p-4 text-slate-400 hover:text-red-500 transition-colors">
             <Delete className="w-10 h-10" />
           </button>
@@ -182,14 +208,15 @@ export const MathGame: React.FC<Props> = ({ levelConfig, onBack, onFinish }) => 
             <button
               key={num}
               onClick={() => handleInput(num)}
-              className={`bg-white text-slate-700 text-4xl font-bold py-6 rounded-2xl shadow-md border-b-4 border-slate-200 active:border-b-0 active:translate-y-1 transition-all ${num === 0 ? 'col-span-2' : ''}`}
+              className={`bg-white text-slate-700 text-4xl font-bold py-6 rounded-2xl shadow-md border-b-4 border-slate-200 active:border-b-0 active:translate-y-1 transition-all hover:bg-indigo-50 ${num === 0 ? 'col-span-2' : ''}`}
             >
               {num}
             </button>
           ))}
           <button
             onClick={handleSubmit}
-            className="bg-indigo-600 text-white text-3xl font-bold py-6 rounded-2xl shadow-md border-b-4 border-indigo-800 active:border-b-0 active:translate-y-1 transition-all flex items-center justify-center"
+            disabled={userAnswer === ""}
+            className="bg-indigo-600 text-white text-3xl font-bold py-6 rounded-2xl shadow-md border-b-4 border-indigo-800 active:border-b-0 active:translate-y-1 transition-all flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Check className="w-12 h-12" />
           </button>
