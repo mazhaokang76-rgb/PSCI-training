@@ -1,13 +1,14 @@
+### 7️⃣ **components/PatternGame.tsx** (完整替换)
+```typescript
 import React, { useState, useEffect } from 'react';
 import { LevelConfig } from '../types';
-import { generateEncouragement } from '../services/geminiService';
 import { speak, playSound } from '../services/audioService';
-import { Star, HelpCircle, ArrowRight, Play, Clock, Puzzle } from 'lucide-react';
+import { Star, HelpCircle, Play, Clock, Puzzle } from 'lucide-react';
 
 interface Props {
   levelConfig: LevelConfig;
   onBack: () => void;
-  onFinish: (score: number, stars: number, action: 'next' | 'quit') => void;
+  onFinish: (score: number, stars: number) => void;
 }
 
 interface PatternQuestion {
@@ -16,81 +17,71 @@ interface PatternQuestion {
   answer: string;
 }
 
+const generateQuestion = (): PatternQuestion => {
+  const type = Math.floor(Math.random() * 4);
+  
+  if (type === 0) {
+    const sets = [['🔴', '🔵'], ['🐶', '🐱'], ['☀️', '🌙'], ['⬆️', '⬇️'], ['🅰️', '🅱️']];
+    const set = sets[Math.floor(Math.random() * sets.length)];
+    const seq = [set[0], set[1], set[0], set[1], set[0]];
+    return {
+      sequence: seq,
+      options: [set[0], set[1], '❓'].sort(() => Math.random() - 0.5),
+      answer: set[1]
+    };
+  }
+  
+  if (type === 1) {
+    const sets = [['🍎', '🍐'], ['🚗', '🚕'], ['◼️', '◻️']];
+    const set = sets[Math.floor(Math.random() * sets.length)];
+    const seq = [set[0], set[0], set[1], set[1], set[0]];
+    return {
+      sequence: seq,
+      options: [set[0], set[1], '❓'].sort(() => Math.random() - 0.5),
+      answer: set[0]
+    };
+  }
+
+  if (type === 2) {
+    const start = Math.floor(Math.random() * 10) + 1;
+    const step = [1, 2, 5, 10][Math.floor(Math.random() * 4)];
+    const seq = [0, 1, 2, 3].map(i => (start + i * step).toString());
+    const next = (start + 4 * step).toString();
+    const wrong1 = (start + 4 * step + step).toString();
+    const wrong2 = (start + 4 * step - step).toString();
+    return {
+      sequence: seq,
+      options: [next, wrong1, wrong2].sort(() => Math.random() - 0.5),
+      answer: next
+    };
+  }
+
+  const startHour = Math.floor(Math.random() * 8) + 1;
+  const clocks = ['🕐','🕑','🕒','🕓','🕔','🕕','🕖','🕗','🕘','🕙','🕚','🕛'];
+  const seq = [clocks[startHour-1], clocks[startHour], clocks[startHour+1]];
+  return {
+    sequence: seq,
+    options: [clocks[startHour+2], clocks[startHour+3] || clocks[0], clocks[startHour-2] || clocks[11]].sort(() => Math.random() - 0.5),
+    answer: clocks[startHour+2]
+  };
+};
+
 export const PatternGame: React.FC<Props> = ({ levelConfig, onBack, onFinish }) => {
   const [gameState, setGameState] = useState<'intro' | 'playing' | 'feedback'>('intro');
   const [currentQ, setCurrentQ] = useState<PatternQuestion | null>(null);
   const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(60);
   const [message, setMessage] = useState("");
-  const [questionCount, setQuestionCount] = useState(0);
 
   useEffect(() => {
     if (gameState === 'intro') {
-      speak(`找规律第${levelConfig.level}关。在60秒内，猜猜下一个是什么。`);
+      speak(`找规律第${levelConfig.level}关`);
     }
-  }, [gameState, levelConfig.level]);
-
-  const generateQuestion = (): PatternQuestion => {
-    const type = Math.floor(Math.random() * 4);
-    
-    // Type 0: ABAB Pattern
-    if (type === 0) {
-      const sets = [
-        ['🔴', '🔵'], ['🐶', '🐱'], ['☀️', '🌙'], ['⬆️', '⬇️'], ['🅰️', '🅱️']
-      ];
-      const set = sets[Math.floor(Math.random() * sets.length)];
-      const seq = [set[0], set[1], set[0], set[1], set[0]];
-      return {
-        sequence: seq,
-        options: [set[0], set[1], '❓'].sort(() => Math.random() - 0.5),
-        answer: set[1]
-      };
-    }
-    
-    // Type 1: AABB Pattern
-    if (type === 1) {
-      const sets = [
-        ['🍎', '🍐'], ['🚗', '🚕'], ['◼️', '◻️']
-      ];
-      const set = sets[Math.floor(Math.random() * sets.length)];
-      const seq = [set[0], set[0], set[1], set[1], set[0]];
-      return {
-        sequence: seq,
-        options: [set[0], set[1], '❓'].sort(() => Math.random() - 0.5),
-        answer: set[0]
-      };
-    }
-
-    // Type 2: Number Sequence (+1, +2, +5, +10)
-    if (type === 2) {
-      const start = Math.floor(Math.random() * 10) + 1;
-      const step = [1, 2, 5, 10][Math.floor(Math.random() * 4)];
-      const seq = [0, 1, 2, 3].map(i => (start + i * step).toString());
-      const next = (start + 4 * step).toString();
-      const wrong1 = (start + 4 * step + step).toString();
-      const wrong2 = (start + 4 * step - step).toString();
-      return {
-        sequence: seq,
-        options: [next, wrong1, wrong2].sort(() => Math.random() - 0.5),
-        answer: next
-      };
-    }
-
-    // Type 3: Clock (Hours)
-    const startHour = Math.floor(Math.random() * 8) + 1;
-    const clocks = ['🕐','🕑','🕒','🕓','🕔','🕕','🕖','🕗','🕘','🕙','🕚','🕛'];
-    const seq = [clocks[startHour-1], clocks[startHour], clocks[startHour+1]];
-    return {
-      sequence: seq,
-      options: [clocks[startHour+2], clocks[startHour+3] || clocks[0], clocks[startHour-2] || clocks[11]].sort(() => Math.random() - 0.5),
-      answer: clocks[startHour+2]
-    };
-  };
+  }, [gameState]);
 
   const startGame = () => {
     setScore(0);
-    setQuestionCount(0);
-    setTimeLeft(60); // Unified 60s duration
+    setTimeLeft(60);
     setCurrentQ(generateQuestion());
     setGameState('playing');
     playSound('click');
@@ -116,24 +107,18 @@ export const PatternGame: React.FC<Props> = ({ levelConfig, onBack, onFinish }) 
     if (option === currentQ.answer) {
       playSound('success');
       setScore(s => s + 10);
-      setQuestionCount(c => c + 1);
     } else {
       playSound('error');
     }
     
-    // Generate next question immediately
     setCurrentQ(generateQuestion());
   };
 
-  const endGame = async () => {
+  const endGame = () => {
     setGameState('feedback');
-    const msg = await generateEncouragement(score, "找规律");
-    setMessage(msg);
-    
-    // Normalized stars: >80 (8 correct) is 3 stars
     const stars = score >= 80 ? 3 : score >= 50 ? 2 : 1;
-    if (stars >= 2) speak(`时间到！你真聪明，答对了${questionCount}题。`);
-    else speak(`时间到！继续加油。`);
+    setMessage(stars >= 2 ? "逻辑思维真好！" : "多练习会更好！");
+    if (stars >= 2) speak("时间到！你真聪明");
   };
 
   if (gameState === 'intro') {
@@ -148,7 +133,7 @@ export const PatternGame: React.FC<Props> = ({ levelConfig, onBack, onFinish }) 
             第 {levelConfig.level} 关
           </div>
           <p className="text-xl text-slate-600 leading-relaxed mb-8">
-            限时60秒。<br/>
+            限时60秒<br/>
             观察排列，猜猜下一个是什么？
           </p>
           
@@ -178,15 +163,12 @@ export const PatternGame: React.FC<Props> = ({ levelConfig, onBack, onFinish }) 
           <h3 className="text-4xl font-bold mb-4 text-slate-800">时间到!</h3>
           <p className="text-5xl font-bold text-violet-600 mb-4">{score} 分</p>
           <p className="text-xl text-slate-600 mb-8 font-medium">{message}</p>
-          <div className="flex flex-col gap-4">
-            <button 
-              onClick={() => onFinish(score, stars, 'next')}
-              className="bg-violet-600 text-white text-2xl py-4 rounded-2xl shadow-lg hover:bg-violet-700 w-full font-bold active:scale-95 transition-all"
-            >
-              {stars >= 2 ? "下一关" : "完成"}
-            </button>
-            <button onClick={() => onFinish(score, stars, 'quit')} className="text-slate-400 py-2 text-lg">退出</button>
-          </div>
+          <button 
+            onClick={() => onFinish(score, stars)}
+            className="w-full bg-violet-600 text-white text-2xl py-4 rounded-2xl shadow-lg hover:bg-violet-700 font-bold active:scale-95 transition-all"
+          >
+            完成
+          </button>
         </div>
       </div>
     );
@@ -205,7 +187,6 @@ export const PatternGame: React.FC<Props> = ({ levelConfig, onBack, onFinish }) 
       <div className="flex-1 flex flex-col justify-center animate-fade-in">
         {currentQ && (
           <>
-            {/* Sequence Display */}
             <div className="bg-white p-6 rounded-3xl shadow-lg border-2 border-violet-100 mb-8 flex flex-wrap justify-center items-center gap-4 min-h-[160px]">
               {currentQ.sequence.map((item, i) => (
                  <div key={i} className="text-6xl md:text-7xl drop-shadow-sm">{item}</div>
@@ -215,7 +196,6 @@ export const PatternGame: React.FC<Props> = ({ levelConfig, onBack, onFinish }) 
               </div>
             </div>
 
-            {/* Options */}
             <div className="grid grid-cols-3 gap-6">
               {currentQ.options.map((opt, i) => (
                 <button
