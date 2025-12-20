@@ -297,7 +297,7 @@ const App: React.FC = () => {
             </div>
             <div>
               <h1 className="text-xl font-bold text-slate-900 tracking-tight leading-none">NeuroGuard PSCI</h1>
-              <p className="text-xs text-slate-500 font-medium mt-1 tracking-wide">认知训练系统 | 智缘益慷</p>
+              <p className="text-xs text-slate-500 font-medium mt-1 tracking-wide">认知康复系统 | 智缘益慷</p>
             </div>
           </div>
           <button 
