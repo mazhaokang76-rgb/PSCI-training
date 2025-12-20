@@ -133,9 +133,9 @@ return (
 <div className="bg-white p-8 rounded-3xl shadow-xl border-4 border-cyan-100 max-w-md w-full relative overflow-hidden">
 <div className="absolute top-0 left-0 w-full h-3 bg-cyan-500"></div>
 <div className="flex justify-center gap-2 mb-6 mt-4">
-{[1, 2, 3].map(i => (
-<Star key={i} className={w-14 h-14 ${i <= stars ? 'text-yellow-400 fill-yellow-400 drop-shadow-md' : 'text-slate-200'} transition-all} />
-))}
+  {[1, 2, 3].map(i => (
+    <Star key={i} className={`w-14 h-14 ${i <= stars ? 'text-yellow-400 fill-yellow-400 drop-shadow-md' : 'text-slate-200'} transition-all`} />
+  ))}
 </div>
 <h3 className="text-4xl font-bold mb-4 text-slate-800">完成!</h3>
 <p className="text-5xl font-bold text-cyan-600 mb-4">{score} 分</p>
