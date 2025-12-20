@@ -45,7 +45,7 @@ export const Dashboard: React.FC<Props> = ({ scores, onBack }) => {
          </button>
          <div>
             <h1 className="text-xl font-bold text-slate-900">训练进展报告</h1>
-            <p className="text-xs text-slate-500 font-medium">GROK AI 认知康复评估系统</p>
+            <p className="text-xs text-slate-500 font-medium">AI 认知康复评估系统</p>
          </div>
       </header>
 
@@ -84,7 +84,7 @@ export const Dashboard: React.FC<Props> = ({ scores, onBack }) => {
                 <div className="px-6 py-4 border-b border-slate-100 bg-gradient-to-r from-blue-50 to-indigo-50 flex justify-between items-center">
                     <div className="flex items-center gap-2">
                         <Brain className="w-5 h-5 text-blue-600" />
-                        <h3 className="font-bold text-slate-800">Grok AI 康复评估</h3>
+                        <h3 className="font-bold text-slate-800">AI 康复评估</h3>
                         <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full font-semibold">AI POWERED</span>
                     </div>
                     {!loading && (
@@ -103,14 +103,14 @@ export const Dashboard: React.FC<Props> = ({ scores, onBack }) => {
                         <div className="text-center py-12 text-slate-500">
                             <Brain className="w-16 h-16 mx-auto mb-4 text-slate-300" />
                             <p className="text-lg font-medium mb-2">尚未生成 AI 评估报告</p>
-                            <p className="text-sm">点击"生成报告"按钮，让 Grok AI 为您分析认知训练表现</p>
+                            <p className="text-sm">点击"生成报告"按钮，让AI 为您分析认知训练表现</p>
                         </div>
                     )}
 
                     {loading && (
                         <div className="flex flex-col items-center justify-center py-16">
                             <Loader2 className="w-10 h-10 text-blue-600 animate-spin mb-4" />
-                            <span className="text-slate-600 font-medium text-lg">Grok AI 正在分析认知表现...</span>
+                            <span className="text-slate-600 font-medium text-lg">AI 正在分析认知表现...</span>
                             <span className="text-slate-400 text-sm mt-2">这可能需要几秒钟</span>
                         </div>
                     )}
