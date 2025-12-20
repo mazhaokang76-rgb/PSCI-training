@@ -162,30 +162,30 @@ export const MemoryGame: React.FC<Props> = ({ levelConfig, onBack, onFinish }) =
     );
   }
 
-  return (
+ return (
     <div className="flex flex-col h-full bg-rose-50 p-4">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center mb-4">
         <h3 className="text-2xl font-bold text-rose-900">麻将对对碰</h3>
         <div className="text-rose-800 font-bold bg-white px-6 py-2 rounded-full shadow-sm text-xl border border-rose-100">
           步数: {moves}
         </div>
       </div>
 
-      <div className={`grid gap-4 flex-1 content-center ${
-        (levelConfig.params?.pairCount || 4) > 6 ? 'grid-cols-4' : 'grid-cols-3'
+      <div className={`grid gap-3 flex-1 content-center max-w-4xl mx-auto w-full ${
+        (levelConfig.params?.pairCount || 4) > 6 ? 'grid-cols-4' : 'grid-cols-4 md:grid-cols-3'
       }`}>
         {cards.map(card => (
           <button
             key={card.id}
             onClick={() => handleCardClick(card)}
-            className={`aspect-[3/4] rounded-xl shadow-md flex items-center justify-center transition-all duration-500 transform perspective-1000
+            className={`aspect-[2/3] rounded-xl shadow-md flex items-center justify-center transition-all duration-500 transform perspective-1000
               ${card.isFlipped || card.isMatched 
                 ? 'bg-orange-50 border-4 border-orange-100 rotate-y-180' 
                 : 'bg-gradient-to-br from-blue-600 to-blue-800 border-2 border-white'}`}
             disabled={card.isMatched || card.isFlipped}
           >
             {(card.isFlipped || card.isMatched) 
-              ? <span className="text-6xl md:text-7xl select-none leading-none">{card.content}</span>
+              ? <span className="text-5xl md:text-6xl lg:text-7xl select-none leading-none">{card.content}</span>
               : <div className="w-full h-full opacity-20 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] rounded-lg"></div>}
           </button>
         ))}
