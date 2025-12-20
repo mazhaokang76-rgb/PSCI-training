@@ -71,7 +71,7 @@ ${summary}
             content: prompt
           }
         ],
-        model: "grok-3",
+        model: "'grok-2-vision-1212",
         stream: false,
         temperature: 0.7
       })
