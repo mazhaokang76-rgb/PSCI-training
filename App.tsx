@@ -356,7 +356,7 @@ const App: React.FC = () => {
         </div>
         
         <footer className="px-8 py-4 bg-white border-t border-slate-200 text-center text-xs text-slate-400 font-medium">
-          NeuroGuard PSCI v2.0 • Professional Cognitive Rehabilitation
+          NeuroGuard PSCI v2.0 • 上海智缘益慷科技有限公司
         </footer>
       </div>
     );
