@@ -74,8 +74,7 @@ ${summary}
         model: "grok-4-1-mini",
         stream: false,
         temperature: 0.7
-        max_tokens: 800 
-      })
+        })
     });
 
     console.log('Response status:', response.status);
