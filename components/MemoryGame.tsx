@@ -178,7 +178,7 @@ export const MemoryGame: React.FC<Props> = ({ levelConfig, onBack, onFinish }) =
           <button
             key={card.id}
             onClick={() => handleCardClick(card)}
-            className={`aspect-[2/3] rounded-xl shadow-md flex items-center justify-center transition-all duration-500 transform perspective-1000
+            className={`aspect-[2/1] rounded-xl shadow-md flex items-center justify-center transition-all duration-500 transform perspective-1000
               ${card.isFlipped || card.isMatched 
                 ? 'bg-orange-50 border-4 border-orange-100 rotate-y-180' 
                 : 'bg-gradient-to-br from-blue-600 to-blue-800 border-2 border-white'}`}
