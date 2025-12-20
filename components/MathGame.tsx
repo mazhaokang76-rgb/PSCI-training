@@ -11,50 +11,84 @@ interface Props {
 
 const generateMathProblem = (difficulty: Difficulty): { question: string; answer: number } => {
   if (difficulty === Difficulty.EASY) {
-    const a = Math.floor(Math.random() * 9) + 1;
-    const b = Math.floor(Math.random() * 9) + 1;
-    return { question: `${a} + ${b} = ?`, answer: a + b };
+    const scenarios = [
+      () => {
+        const a = Math.floor(Math.random() * 5) + 1;
+        const b = Math.floor(Math.random() * 5) + 1;
+        return { question: `🍎 ${a}元 + 🍌 ${b}元 = ?`, answer: a + b };
+      },
+      () => {
+        const a = Math.floor(Math.random() * 5) + 1;
+        const b = Math.floor(Math.random() * 5) + 1;
+        return { question: `🥬 ${a}元 + 🥕 ${b}元 = ?`, answer: a + b };
+      },
+      () => {
+        const total = Math.floor(Math.random() * 8) + 3;
+        const paid = total + Math.floor(Math.random() * 3) + 1;
+        return { question: `买菜${total}元，付${paid}元，找零?`, answer: paid - total };
+      }
+    ];
+    return scenarios[Math.floor(Math.random() * scenarios.length)]();
   }
   
   if (difficulty === Difficulty.MEDIUM) {
-    const operations = [
+    const scenarios = [
       () => {
-        const a = Math.floor(Math.random() * 15) + 5;
-        const b = Math.floor(Math.random() * 10) + 1;
-        return { question: `${a} - ${b} = ?`, answer: a - b };
+        const pricePerKg = Math.floor(Math.random() * 5) + 3;
+        const kg = Math.floor(Math.random() * 3) + 2;
+        return { question: `白菜${pricePerKg}元/斤，买${kg}斤 = ?`, answer: pricePerKg * kg };
       },
       () => {
-        const a = Math.floor(Math.random() * 8) + 2;
-        const b = Math.floor(Math.random() * 8) + 2;
-        return { question: `${a} + ${b} = ?`, answer: a + b };
+        const a = Math.floor(Math.random() * 10) + 5;
+        const b = Math.floor(Math.random() * 8) + 3;
+        return { question: `🍅 ${a}元 - 🥔 ${b}元 = ?`, answer: a - b };
+      },
+      () => {
+        const total = Math.floor(Math.random() * 20) + 10;
+        const paid = total + Math.floor(Math.random() * 10) + 1;
+        return { question: `买菜${total}元，付${paid}元，找?`, answer: paid - total };
+      },
+      () => {
+        const item1 = Math.floor(Math.random() * 8) + 2;
+        const item2 = Math.floor(Math.random() * 8) + 2;
+        return { question: `鸡蛋${item1}元 + 牛奶${item2}元 = ?`, answer: item1 + item2 };
       }
     ];
-    return operations[Math.floor(Math.random() * operations.length)]();
+    return scenarios[Math.floor(Math.random() * scenarios.length)]();
   }
   
-  // HARD
-  const operations = [
+  // HARD - 更复杂的菜场场景
+  const scenarios = [
     () => {
-      const a = Math.floor(Math.random() * 9) + 2;
-      const b = Math.floor(Math.random() * 5) + 2;
-      return { question: `${a} × ${b} = ?`, answer: a * b };
+      const pricePerKg = Math.floor(Math.random() * 6) + 4;
+      const kg = Math.floor(Math.random() * 4) + 2;
+      return { question: `猪肉${pricePerKg}元/斤，买${kg}斤 = ?`, answer: pricePerKg * kg };
     },
     () => {
-      const b = Math.floor(Math.random() * 8) + 2;
-      const answer = Math.floor(Math.random() * 12) + 1;
-      const a = answer * b;
-      return { question: `${a} ÷ ${b} = ?`, answer: answer };
+      const a = Math.floor(Math.random() * 15) + 10;
+      const b = Math.floor(Math.random() * 8) + 5;
+      const c = Math.floor(Math.random() * 5) + 2;
+      return { question: `🐟${a}元 + 🍗${b}元 - 🥚${c}元 = ?`, answer: a + b - c };
     },
     () => {
-      const a = Math.floor(Math.random() * 20) + 10;
-      const b = Math.floor(Math.random() * 15) + 5;
-      const c = Math.floor(Math.random() * 10) + 1;
-      return { question: `${a} - ${b} + ${c} = ?`, answer: a - b + c };
+      const each = Math.floor(Math.random() * 5) + 3;
+      const count = Math.floor(Math.random() * 3) + 3;
+      return { question: `🍊 ${each}元/个，买${count}个 = ?`, answer: each * count };
+    },
+    () => {
+      const total = Math.floor(Math.random() * 30) + 20;
+      const paid = Math.ceil(total / 10) * 10;
+      return { question: `共${total}元，付${paid}元，找?`, answer: paid - total };
+    },
+    () => {
+      const item1 = Math.floor(Math.random() * 12) + 5;
+      const item2 = Math.floor(Math.random() * 10) + 5;
+      const item3 = Math.floor(Math.random() * 8) + 3;
+      return { question: `菜${item1}元 + 肉${item2}元 + 蛋${item3}元 = ?`, answer: item1 + item2 + item3 };
     }
   ];
-  return operations[Math.floor(Math.random() * operations.length)]();
+  return scenarios[Math.floor(Math.random() * scenarios.length)]();
 };
-
 export const MathGame: React.FC<Props> = ({ levelConfig, onBack, onFinish }) => {
   const [gameState, setGameState] = useState<'intro' | 'playing' | 'feedback'>('intro');
   const [currentProblem, setCurrentProblem] = useState<{ question: string; answer: number } | null>(null);
