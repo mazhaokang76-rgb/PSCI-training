@@ -122,7 +122,7 @@ export const TaiChiGame: React.FC<Props> = ({ levelConfig, onBack, onFinish }) =
     else speak("时间到！再试一次吧");
   };
 
-  const moveCatcher = (e: React.MouseEvent | React.TouchEvent) => {
+    const moveCatcher = (e: React.MouseEvent | React.TouchEvent) => {
     if (!containerRef.current) return;
     const rect = containerRef.current.getBoundingClientRect();
     let clientX = 0;
@@ -216,11 +216,12 @@ export const TaiChiGame: React.FC<Props> = ({ levelConfig, onBack, onFinish }) =
         </div>
       ))}
 
-      <div 
-        className="absolute bottom-10 w-32 h-32 bg-gradient-to-t from-red-600 to-red-500 rounded-3xl flex items-center justify-center shadow-2xl border-4 border-yellow-400 transition-all duration-75 ease-out pointer-events-none"
+     <div 
+        className="absolute bottom-10 w-32 h-32 bg-gradient-to-t from-red-600 to-red-500 rounded-3xl flex items-center justify-center shadow-2xl border-4 border-yellow-400 pointer-events-none"
         style={{
           left: `${catcherX}%`,
-          transform: 'translateX(-50%)'
+          transform: 'translateX(-50%)',
+          transition: 'left 0.05s linear'  // 添加这行，加快响应速度
         }}
       >
         <span className="text-6xl drop-shadow-md">💰</span>
