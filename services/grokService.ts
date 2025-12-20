@@ -71,7 +71,7 @@ ${summary}
             content: prompt
           }
         ],
-        model: "grok-beta",
+        model: "grok-3",
         stream: false,
         temperature: 0.7
       })
