@@ -5,6 +5,16 @@ export const generateGrokReport = async (scores: GameScore[]): Promise<string> =
     return "目前没有足够的训练记录。请先进行几次游戏训练，AI治疗师将为您生成评估报告。";
   }
 
+  // 检查 API Key
+  const apiKey = import.meta.env.VITE_GROK_API_KEY;
+  
+  if (!apiKey) {
+    console.error('VITE_GROK_API_KEY is not defined');
+    return `⚠️ API配置错误\n\n未检测到 Grok API 密钥。\n\n请在 Vercel 环境变量中设置:\nVITE_GROK_API_KEY=xai-your-key\n\n然后重新部署。`;
+  }
+
+  console.log('API Key exists:', apiKey.substring(0, 10) + '...');
+
   const recentScores = scores.slice().reverse().slice(0, 15);
   
   const gameNameMap: Record<string, string> = {
@@ -42,11 +52,13 @@ ${summary}
 (提出具体的训练目标，并推荐重点训练的游戏类型)`;
 
   try {
+    console.log('Calling Grok API...');
+    
     const response = await fetch("https://api.x.ai/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${import.meta.env.VITE_GROK_API_KEY}`
+        "Authorization": `Bearer ${apiKey}`
       },
       body: JSON.stringify({
         messages: [
@@ -65,16 +77,30 @@ ${summary}
       })
     });
 
+    console.log('Response status:', response.status);
+
     if (!response.ok) {
       const errorText = await response.text();
       console.error("Grok API Error:", response.status, errorText);
-      throw new Error(`API返回错误: ${response.status}`);
+      
+      if (response.status === 401) {
+        return `⚠️ API认证失败 (401)\n\nGrok API 密钥无效或已过期。\n\n请检查:\n1. API密钥是否正确\n2. API密钥是否有效\n3. 是否有足够的配额\n\n当前使用的Key前缀: ${apiKey.substring(0, 10)}...`;
+      }
+      
+      if (response.status === 429) {
+        return `⚠️ API调用限制 (429)\n\n已达到 API 调用频率限制。\n\n请稍后再试。`;
+      }
+      
+      throw new Error(`API返回错误: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
+    console.log('Report generated successfully');
+    
     return data.choices[0]?.message?.content || "无法生成报告。";
   } catch (error) {
     console.error("Grok Report Error:", error);
-    return `报告生成失败。\n\n错误信息: ${error}\n\n请检查:\n1. Vercel环境变量 VITE_GROK_API_KEY 是否正确设置\n2. API密钥是否有效\n3. 网络连接是否正常`;
+    
+    return `⚠️ 报告生成失败\n\n错误信息: ${error}\n\n可能的原因:\n1. 网络连接问题\n2. API密钥配置错误\n3. Grok API 服务暂时不可用\n\n技术详情:\n- 使用的API Key前缀: ${apiKey ? apiKey.substring(0, 10) + '...' : '未配置'}\n- 错误类型: ${error instanceof Error ? error.message : '未知错误'}`;
   }
 };
