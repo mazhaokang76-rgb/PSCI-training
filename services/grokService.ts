@@ -71,9 +71,10 @@ ${summary}
             content: prompt
           }
         ],
-        model: "'grok-2-vision-1212",
+        model: "grok-4-1-mini",
         stream: false,
         temperature: 0.7
+        max_tokens: 800 
       })
     });
 
